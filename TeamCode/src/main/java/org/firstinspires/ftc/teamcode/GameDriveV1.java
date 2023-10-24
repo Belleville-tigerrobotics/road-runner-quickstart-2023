@@ -106,156 +106,6 @@ public class GameDriveV1 extends LinearOpMode {
             double maximumDriveSpeed = 1 ;
             double max;
 
-            elevatorSpeed = gamepad2.left_trigger - gamepad2.right_trigger;
-            //need to do some stuff here so that we don't exceen the elevator range and trip the overcurrent on the controller
-            currentElevatorHeight = Math.abs(robot.getElevatorHeight());
-                if ((Math.abs(elevatorSpeed)) > .2) {  //then we have some speed request happening
-                    if ((currentElevatorHeight > 4200 && elevatorSpeed <0) || (currentElevatorHeight < 100 && elevatorSpeed >0))  //|| means OR
-                    { //we've exceeded the range
-                        elevatorMoving = false;
-                        robot.setElevatorPower(0);
-                    } else{ //now we do some elevator moving stuff
-                        if (currentElevatorHeight <400) { // slow it down below 400
-                            robot.setElevatorPower(elevatorSpeed* 0.6);
-                        } else {
-                        robot.setElevatorPower(elevatorSpeed);}
-                        elevatorMoving = true;
-                    }
-                } else if (elevatorMoving) { // no more elevator speed, but only if we were already moving
-                    elevatorMoving = false;
-                    robot.setElevatorPower(0);
-                }
-
-
-            if (gamepad1.left_bumper && gamepad1.right_bumper) {robot.setShuttlePower(.5);} else {
-                if (gamepad1.left_bumper) {
-                    robot.setShuttlePower(0);
-                }
-                if (gamepad1.right_bumper) {
-                    robot.setShuttlePower(1);
-                }
-            }
-
-            //Special pickup function--press y when elevator is lower than leve
-
-            if ( currentElevatorHeight <550 && gamepad2.y ){
-                telemetry.addData("Beginning Pickup Sequence","");
-                telemetry.update();
-                robot.setDrivePower(0,0,0,0); //stop drive motors so we don't run away
-                robot.gripperdrop(); //open the gripper
-                robot.setShuttlePower(1);  // slide slightly forward
-                sleep(1500); //brief pause to let the gripper and shuttle get to where they need to be
-                //now lower the elevator to 50
-                robot.setElevatorPosition(-90);
-                telemetry.addData("Pickup Sequence:Moving Elevator","");
-                telemetry.update();
-//                while (robot.getElevatorHeight() <-85 && gamepad2.y )  { }  //do nothing until the elevator gets there or we let go of y
-                sleep (700); //wait for it to get there
-                //now pick up the cone
-
-                    robot.gripperpickup();
-                    sleep (800);
-                    robot.setElevatorPosition(-elevatorPosition0);
-
-            }
-
-
-
-
-//            newShuttlePosition = (gamepad1.left_bumper ? 1:0) - (gamepad1.right_bumper ? 2:0); //some funny math here to make it so left=1 right = 2 both=3, neither=0
-//            switch (newShuttlePosition) {
-//                case 1:
-//                    robot.setShuttlePower(0); //{left button}
-//                    break;
-//                case 2:
-//                    robot.setShuttlePower(1); //right button
-//                    break;
-//                case 3:
-//                    robot.setShuttlePower(.5); //both buttons
-//                    break;
-//            }
-
-            if ( gamepad2.left_bumper) { robot.gripperpickup() ; };
-            if ( gamepad2.right_bumper) { robot.gripperdrop() ; };
-
-//Now it's time to see if we need to set the elevators
-            if (gamepad2.a) {
-                    if (gamepad2.dpad_left) { elevatorPosition1 = Math.abs(robot.getElevatorHeight()); }  else {
-                        if (gamepad2.dpad_up) { elevatorPosition2 = Math.abs(robot.getElevatorHeight()); }  else {
-                            if (gamepad2.dpad_right) { elevatorPosition3 = Math.abs(robot.getElevatorHeight()); } else {
-                                if (gamepad2.dpad_down) { elevatorPosition0 = Math.abs(robot.getElevatorHeight()); } }}}
-
-            } else { //if not gamepad1.a pressed
-
-                if (gamepad2.dpad_left) {
-                    robot.setElevatorPosition(-elevatorPosition1);
-                } else {
-                    if (gamepad2.dpad_up) {
-                        robot.setElevatorPosition(-elevatorPosition2);
-                    } else {
-                        if (gamepad2.dpad_right) {
-                            robot.setElevatorPosition(-elevatorPosition3);
-                        } else {
-                            if (gamepad2.dpad_down) {
-                                robot.setElevatorPosition(-elevatorPosition0);
-                            }
-                        }
-                    }
-                }
-            }
-// Reduce the maximum drive speed if the elevator is up high
-//            currentElevatorHeight = Math.abs(robot.getElevatorHeight()); //removing this..we just set it above a few lines back should be still good
-            if (currentElevatorHeight < elevatorPosition1 ) { maximumDriveSpeed = .8 ; } else {
-                if (currentElevatorHeight < elevatorPosition2) { maximumDriveSpeed = .6; } else {
-                    if (currentElevatorHeight < elevatorPosition3) {maximumDriveSpeed = .2; } else {
-                        maximumDriveSpeed = .3; }
-                }
-            }
-/*
-            // POV Mode uses left joystick to go forward & strafe, and right joystick to rotate.//         double axial   = -gamepad1.left_stick_y;  // Note: pushing stick forward gives negative value
-//            double axial   = gamepad1.right_stick_x;
-            double axial    = -gamepad1.left_stick_y;
-            double lateral =  gamepad1.left_stick_x;
- //           double yaw      = -gamepad1.left_stick_y;
-            double yaw      = gamepad1.right_stick_x;
-            // Combine the joystick requests for each axis-motion to determine each wheel's power.
-            // Set up a variable for each drive wheel to save the power level for telemetry.
-            double leftFrontPower  = axial + lateral + yaw;
-            double rightFrontPower = axial - lateral - yaw;
-            double leftBackPower   = axial - lateral + yaw;
-            double rightBackPower  = axial + lateral - yaw;
-
-            // Normalize the values so no wheel power exceeds 100%
-            // This ensures that the robot maintains the desired motion.
-            max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
-            max = Math.max(max, Math.abs(leftBackPower));
-            max = Math.max(max, Math.abs(rightBackPower));
-
-            if (max > 1) {
-                leftFrontPower  /= max;
-                rightFrontPower /= max;
-                leftBackPower   /= max;
-                rightBackPower  /= max;
-            }
-
-            // This is test code:
-            //
-            // Uncomment the following code to test your motor directions.
-            // Each button should make the corresponding motor run FORWARD.
-            //   1) First get all the motors to take to correct positions on the robot
-            //      by adjusting your Robot Configuration if necessary.
-            //   2) Then make sure they run in the correct direction by modifying the
-            //      the setDirection() calls above.
-            // Once the correct motors move in the correct direction re-comment this code.
-
-
-            // Send calculated power to wheels, and reduce speed as necessary due to elevator height
-            robot.setDrivePower(leftFrontPower*maximumDriveSpeed,
-                    rightFrontPower*maximumDriveSpeed,
-                    leftBackPower*maximumDriveSpeed,
-                    rightBackPower*maximumDriveSpeed);
-*/
-
 
             //field centric drive code goes here
 
@@ -304,7 +154,7 @@ public class GameDriveV1 extends LinearOpMode {
        //     telemetry.addData("ElevatorPosition", "Run Time: " + runtime.toString());
             telemetry.addData("Controller A bumpers for shuttle", " "  );
             telemetry.addData("ControllerB Bumpers for gripper, triggers for up down, dpad for set positions", " "  );
-            telemetry.addData("Servo Position", robot.getGripperPosition());
+
 
             telemetry.addData("Status", "Run Time: " + runtime.toString());
 //            telemetry.addData("Front left/Right", "%4.2f, %4.2f", leftFrontPower, rightFrontPower);
@@ -313,10 +163,6 @@ public class GameDriveV1 extends LinearOpMode {
             telemetry.addData("gamepad degree"  , gamepadDegree);
             telemetry.addData("robot degree"  , robotDegree);
             telemetry.addData("x/y", "%4.2f, %4.2f", gamepad1.right_stick_x, gamepad1.right_stick_y);
-            telemetry.addData("left Distance", robot.getDistanceLeft());
-            telemetry.addData("right Distance", robot.getDistanceRight());
-            telemetry.addData("left Color", robot.getleftcolor());
-            telemetry.addData("right Color", robot.getrightcolor());
 
 
             telemetry.update();
