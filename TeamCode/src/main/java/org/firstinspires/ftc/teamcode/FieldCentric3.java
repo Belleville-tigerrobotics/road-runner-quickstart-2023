@@ -38,8 +38,13 @@ public class FieldCentric3 extends LinearOpMode {
         Servo wristGrip = hardwareMap.get(Servo.class, "wristGrip");
         Servo launcher = hardwareMap.get(Servo.class, "launcher");
 
+
+
         DcMotor lift = hardwareMap.dcMotor.get("lift");
         DcMotor arm = hardwareMap.dcMotor.get("arm");
+
+        lift.setZeroPowerBehavior( DcMotor.ZeroPowerBehavior.BRAKE );
+        arm.setZeroPowerBehavior( DcMotor.ZeroPowerBehavior.BRAKE );
 
         double speedMultiplier = .8;
 
@@ -66,17 +71,36 @@ public class FieldCentric3 extends LinearOpMode {
                 launcher.setPosition(0);
             }
 
+            //test grippers
+   //         leftGrip.setPosition(gamepad2.left_trigger);
+  //        wristGrip.setPosition(.72);
+   //         telemetry.addData("leftposition", gamepad2.left_trigger);
+  //          telemetry.addData("wristgrip", gamepad2.right_trigger);
+
+
+            arm.setPower((gamepad2.left_trigger-gamepad2.right_trigger)*.45);
+            lift.setPower((gamepad1.left_trigger-gamepad1.right_trigger)*.75 );
+
+
             //commands to operate the grippers
             if (gamepad2.x) { //operate left gripper
-                leftGrip.setPosition(1);
+                leftGrip.setPosition(.15);
             } else {
                 leftGrip.setPosition(0);
             }
 
             if (gamepad2.b) { //operate right gripper
-                rightGrip.setPosition(0);
+                rightGrip.setPosition(.1);
             } else {
-                rightGrip.setPosition(1);
+                rightGrip.setPosition(.3);
+            }
+
+            if (gamepad2.left_bumper) {
+                wristGrip.setPosition(.72);
+            }
+
+            if (gamepad2.right_bumper) {
+                wristGrip.setPosition(.22);
             }
 
             double driveTurn = gamepad1.right_stick_x;
