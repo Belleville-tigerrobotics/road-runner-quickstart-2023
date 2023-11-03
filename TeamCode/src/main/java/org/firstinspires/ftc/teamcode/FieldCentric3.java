@@ -26,6 +26,8 @@ public class FieldCentric3 extends LinearOpMode {
         DcMotor frontRightMotor = hardwareMap.dcMotor.get("rightFront");
         DcMotor backRightMotor = hardwareMap.dcMotor.get("rightBack");
 
+        boolean endgame = false;
+
         // Reverse the right side motors. This may be wrong for your setup.
         // If your robot moves backwards when commanded to go forwards,
         // reverse the left side instead.
@@ -46,7 +48,7 @@ public class FieldCentric3 extends LinearOpMode {
         lift.setZeroPowerBehavior( DcMotor.ZeroPowerBehavior.BRAKE );
         arm.setZeroPowerBehavior( DcMotor.ZeroPowerBehavior.BRAKE );
 
-        double speedMultiplier = .8;
+        double speedMultiplier = .7;
 
         // Retrieve the IMU from the hardware map
         IMU imu = hardwareMap.get(IMU.class, "imu");
@@ -67,10 +69,14 @@ public class FieldCentric3 extends LinearOpMode {
 
         while (opModeIsActive()) {
  //here's our loop
-            if (gamepad1.y) {  //launch drone
+            if (gamepad1.y && gamepad1.a) {  //launch drone
                 launcher.setPosition(0);
             }
 
+            if (gamepad1.x) {  //declare endgame for arm power boost
+                endgame = !endgame;
+            }
+            telemetry.addData("Endgame?",endgame);
             //test grippers
    //         leftGrip.setPosition(gamepad2.left_trigger);
   //        wristGrip.setPosition(.72);
@@ -78,30 +84,39 @@ public class FieldCentric3 extends LinearOpMode {
   //          telemetry.addData("wristgrip", gamepad2.right_trigger);
 
 
-            arm.setPower((gamepad2.left_trigger-gamepad2.right_trigger)*.45);
-            lift.setPower((gamepad1.left_trigger-gamepad1.right_trigger)*.75 );
+            if (endgame) {
+                arm.setPower((gamepad2.left_trigger - gamepad2.right_trigger - .15) * .5);
+            } else {
+                arm.setPower((gamepad2.left_trigger - gamepad2.right_trigger) * .5);
+            }
+            lift.setPower((gamepad1.left_trigger-gamepad1.right_trigger)*.90 );
 
 
             //commands to operate the grippers
-            if (gamepad2.x) { //operate left gripper
+            if (gamepad2.left_bumper) { //operate left gripper
                 leftGrip.setPosition(.15);
             } else {
                 leftGrip.setPosition(0);
             }
 
-            if (gamepad2.b) { //operate right gripper
+            if (gamepad2.right_bumper) { //operate right gripper
                 rightGrip.setPosition(.1);
             } else {
                 rightGrip.setPosition(.3);
             }
 
-            if (gamepad2.left_bumper) {
-                wristGrip.setPosition(.72);
+            if (gamepad2.a) {  //this is the downon the ground position.  bigger is towards the ground
+                wristGrip.setPosition(.73);
             }
 
-            if (gamepad2.right_bumper) {
-                wristGrip.setPosition(.22);
+            if (gamepad2.y) {
+                wristGrip.setPosition(.36);
             }
+
+            if (gamepad2.x) {
+                wristGrip.setPosition(.64);
+            }
+
 
             double driveTurn = gamepad1.right_stick_x;
             double gamepadXCoordinate = -gamepad1.left_stick_x; //this simply gives our x value relative to the driver
@@ -148,7 +163,7 @@ public class FieldCentric3 extends LinearOpMode {
             // This button choice was made so that it is hard to hit on accident,
             // it can be freely changed based on preference.
             // The equivalent button is start on Xbox-style controllers.
-            if (gamepad1.options) {
+            if (gamepad1.back) {
                 imu.resetYaw();
             }
 
